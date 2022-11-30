@@ -1,0 +1,178 @@
+#include <Keypad.h> 
+#include <LiquidCrystal_I2C.h> 
+#include <Servo.h> 
+LiquidCrystal_I2C lcd(0x27,20,4); 
+Servo servo;
+
+#define Password_Length 8 
+int Position = 0;
+char Particular[Password_Length]; 
+char Specific[Password_Length] = "A235689"; code, change this to anything you want with the numbers 0-9 an dthe letters A-D
+byte Particular_Count = 0, Specific_Count = 0; 
+char Key; 
+const byte ROWS = 4; 
+const byte COLS = 4; 
+char keys[ROWS][COLS] = { 
+  // sets the keypad digits
+  {'1','2','3','A'}, 
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+bool SmartDoor = true; // the servo 
+// the pins to plug the keypad into
+byte rowPins[ROWS] = {8, 7, 6, 5}; 
+byte colPins[COLS] = {4, 3, 2, 1}; 
+Keypad myKeypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS); 
+
+// locked charcater
+byte Locked[8] = { 
+  B01110,
+  B10001,
+  B10001,
+  B11111,
+  B11011,
+  B11011,
+  B11011,
+  B11111
+};
+// open character
+byte Opened[8] = {
+  B01110,
+  B00001,
+  B00001,
+  B11111,
+  B11011,
+  B11011,
+  B11011,
+  B11111
+};
+void setup()
+{
+  servo.attach(0); 
+  ServoClose(); 
+  lcd.init(); 
+  lcd.backlight(); 
+  lcd.setCursor(0,0); 
+  lcd.print("VIT Ap"); 
+  lcd.setCursor(0,1); 
+  lcd.print("Security  Lock"); 
+  delay(4000); 
+  lcd.clear(); 
+}
+void loop()
+{
+  if (SmartDoor == 0) 
+  {
+    Key = myKeypad.getKey(); 
+    if (Key == '#') 
+    {
+      lcd.clear(); 
+      ServoClose(); 
+      lcd.setCursor(2,0); 
+      lcd.print("Door Closed"); 
+      lcd.createChar(0, Locked); 
+      lcd.setCursor(14,0); 
+      lcd.write(0); 
+      delay(3000); 
+      SmartDoor = 1; 
+    }
+  }
+
+  else Open(); 
+}
+
+void clearData() 
+{
+  while (Particular_Count != 0) 
+  {
+    Particular[Particular_Count--] = 0; 
+  }
+  return; 
+}
+
+void ServoOpen() 
+{
+  for (Position = 180; Position >= 0; Position -= 5) { 
+    servo.write(Position); 
+    delay(15); 
+  }
+}
+
+void ServoClose() 
+{
+  for (Position = 0; Position <= 180; Position += 5) { 
+    servo.write(Position); 
+    delay(15); 
+  }
+}
+void Open() 
+{
+  lcd.setCursor(1,0); 
+  lcd.print("Enter Password"); 
+  
+  Key = myKeypad.getKey(); 
+  if (Key)
+  {
+    Particular[Particular_Count] = Key; 
+    lcd.setCursor(Particular_Count, 1); 
+    lcd.print("*"); 
+    Particular_Count++; 
+  }
+  if (Particular_Count == Password_Length - 1) 
+  {
+    if (!strcmp(Particular, Specific)) 
+    {
+      lcd.clear();
+      ServoOpen(); 
+      lcd.setCursor(2,0); 
+      lcd.print("Door Opened");
+      lcd.createChar(1, Opened);
+      lcd.setCursor(14,0); 
+      lcd.write(1);
+      lcd.setCursor(0,1); 
+      lcd.print("Press # to Close");
+      SmartDoor = 0;
+    }
+    else {
+      lcd.clear();
+      lcd.setCursor(0,0); 
+      lcd.print("Wrong Password"); 
+      lcd.setCursor(0,1);
+      lcd.print("Try Again In");
+      lcd.setCursor(13,1);
+      lcd.print("10");
+      delay(1000);
+      lcd.setCursor(13,1);
+      lcd.print("09");
+      delay(1000);
+ lcd.setCursor(13,1);
+      lcd.print("08");
+      delay(1000);
+      lcd.setCursor(13,1);
+      lcd.print("07");
+      delay(1000);
+      lcd.setCursor(13,1);
+      lcd.print("06");
+      delay(1000);
+      lcd.setCursor(13,1);
+      lcd.print("05");
+      delay(1000);
+      lcd.setCursor(13,1);
+      lcd.print("04");
+      delay(1000);
+      lcd.setCursor(13,1);
+      lcd.print("03");
+      delay(1000);
+      lcd.setCursor(13,1);
+      lcd.print("02");
+      delay(1000);
+      lcd.setCursor(13,1);
+      lcd.print("01");
+      delay(1000);
+      lcd.setCursor(13,1);
+      lcd.print("00");
+      delay(1000);
+      lcd.clear();
+      SmartDoor = 1; 
+      clearData(); }}
